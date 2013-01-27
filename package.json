@@ -1,0 +1,24 @@
+{
+  "name": "all-the-numbers",
+  "version": "0.0.0",
+  "description": "CouchDB View Server Benchmarking Suite",
+  "main": "bench.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chewbranca/all-the-numbers.git"
+  },
+  "keywords": [
+    "couchdb",
+    "benchmark"
+  ],
+  "author": "Russell Branca",
+  "license": "Apache V2",
+  "dependencies": {
+    "request": "2.12.x",
+    "async": "0.1.22",
+    "lodash": "1.0.0-rc.3"
+  }
+}
