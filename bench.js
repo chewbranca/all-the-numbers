@@ -4,11 +4,13 @@ var _ = require('lodash');
 
 var couchdb = "http://localhost:5984";
 var resultsdb = couchdb + "/all_the_numbers_results";
+//var numDocs = 1e5;
 var numDocs = 1e4;
 var batchSize = 1000;
 var iterations = 10;
 //var sleepTime = 1000; // hack for osx connection errors
 var sleepTime = 0;
+var docType = 'standard';
 
 var resultsDdoc = {
   _id: "_design/all_the_numbers",
@@ -16,7 +18,7 @@ var resultsDdoc = {
   views: {
     by_test: {
       map: function(doc) {
-        emit([doc.testBed, doc._id], doc.viewDuration);
+        emit([doc.testBed, doc._id, doc.numDocs, doc.docType], doc.viewDuration);
       },
       reduce: "_stats"
     }
@@ -24,7 +26,7 @@ var resultsDdoc = {
 };
 
 var ddocs = {
-  "base_spidermonkey": {
+  "base_spidermonkey_1_2_x": {
     _id: "_design/base_spidermonkey",
     "language": "javascript",
     "views": {
@@ -55,6 +57,12 @@ var stringifyViews = function(key, value) {
   }
 };
 
+var throwReq = function(resp, body) {
+  var statusCode = resp.statusCode;
+  var path = resp.req.path;
+  throw("ERROR("+statusCode+") on "+path+": "+JSON.stringify(body));
+};
+
 var checkResultsDb = function(cb) {
   request.get(resultsdb, function(err, resp) {
     if (err) throw(err);
@@ -63,6 +71,7 @@ var checkResultsDb = function(cb) {
       console.log("CREATING RESULTS DATBASE");
       request.put(resultsdb, function(err, resp, body) {
         if (err) throw(err);
+        if (resp.statusCode >= 400) throwReq(resp, body);
 
         request.post({
           url: resultsdb,
@@ -70,8 +79,9 @@ var checkResultsDb = function(cb) {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify(resultsDdoc, stringifyViews)
-        }, function(err, resp) {
+        }, function(err, resp, body) {
           if (err) throw(err);
+          if (resp.statusCode >= 400) throwReq(resp, body);
 
           cb();
         });
@@ -87,6 +97,7 @@ var runTests = function() {
   console.log([batchSize, numDocs]);
   _.each(ddocs, function(ddoc, id) {
     console.log("BUILDING: "+id);
+    var ddocID = ddoc._id;
     var count = 0;
     var docBatches = [];
     var testdb = couchdb + "/all_the_numbers_test_" + id;
@@ -109,6 +120,7 @@ var runTests = function() {
         console.log("CREATING "+testdb);
         request.put(testdb, function(err, resp, body) {
           if (err) throw(err);
+          if (resp.statusCode >= 400) throwReq(resp, body);
 
           callback();
         });
@@ -137,6 +149,9 @@ var runTests = function() {
     }));
     funcs.push(function(callback) {
       request.get({url:testdb, json:true}, function(err, resp, body) {
+        if (err) throw(err);
+        if (resp.statusCode >= 400) throwReq(resp, body);
+
         var docCount = body.doc_count;
         if (docCount !== numDocs) {
           throw("INVALID DOC COUNT: GOT: "+docCount+" EXPECTED: "+numDocs);
@@ -155,6 +170,7 @@ var runTests = function() {
         body: JSON.stringify(ddoc, stringifyViews)
       }, function(err, resp, body) {
         if (err) throw(err);
+        if (resp.statusCode >= 400) throwReq(resp, body);
 
         callback();
       });
@@ -163,16 +179,20 @@ var runTests = function() {
       console.log("GENERATING VIEW");
       var start = (new Date()).getTime();
       request.get({
-        url: testdb + "/_design/"+id+"/_view/by_foo?limit=1",
+        url: testdb + "/"+ddocID+"/_view/by_foo?limit=1",
         json: true
       }, function(err, resp, body) {
+        if (err) throw(err);
+        if (resp.statusCode >= 400) throwReq(resp, body);
+
         var end = (new Date()).getTime();
         var duration = (end - start) / 1000;
         console.log("VIEW BUILD DURATION: " + duration + " seconds");
         var results = {
           testBed: id,
           viewDuration: duration,
-          numDocs: numDocs
+          numDocs: numDocs,
+          docType: docType
         };
         request.post({
           url: resultsdb,
@@ -182,12 +202,14 @@ var runTests = function() {
           body: JSON.stringify(results)
         }, function(err, resp, body) {
           if (err) throw(err);
+          if (resp.statusCode >= 400) throwReq(resp, body);
 
           request.get({
             url: resultsdb + '/_design/all_the_numbers/_view/by_test?group_level=1&startkey=["'+id+'"]&endkey=["'+id+'",{}]',
             json:true
           }, function(err, resp, body) {
             if (err) throw(err);
+            if (resp.statusCode >= 400) throwReq(resp, body);
 
             var data = body.rows[0];
             console.log("MIN DURATION: "+data.value.min);
