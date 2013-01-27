@@ -41,6 +41,23 @@ relative performance. Various settings are currently hardcoded in bench.js.
     ; [query_servers]
     ; javascript = /usr/local/bin/couchjs /usr/local/share/couchdb/server/main.js
 
+## Example Output
+
+$ node bench.js
+RUNNING TESTS -- (batchsize/numDocs):
+[ 1000, 10000 ]
+BUILDING: base\_spidermonkey
+DELETING http://localhost:5984/all\_the\_numbers\_test\_base\_spidermonkey
+CREATING http://localhost:5984/all\_the\_numbers\_test\_base\_spidermonkey
+FOUND DOCS: 10000/10000
+GENERATING VIEW
+VIEW BUILD DURATION: 1.495 seconds
+MIN DURATION: 1.471
+AVG DURATION: 1.5111176470588235
+MAX DURATION: 1.548
+CURRENT TEST DURATION: 1.495
+Finished processing view: base\_spidermonkey
+
 ## Contributing
 
 Please!
