@@ -38,8 +38,8 @@ relative performance. Various settings are currently hardcoded in bench.js.
 ## Config
 
     ; Default view engine
-    ; [query_servers]$
-    ; javascript = /usr/local/bin/couchjs /usr/local/share/couchdb/server/main.js$
+    ; [query_servers]
+    ; javascript = /usr/local/bin/couchjs /usr/local/share/couchdb/server/main.js
 
 ## Contributing
 
