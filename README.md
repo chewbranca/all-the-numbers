@@ -40,6 +40,10 @@ relative performance. Various settings are currently hardcoded in bench.js.
     ; Default view engine
     ; [query_servers]
     ; javascript = /usr/local/bin/couchjs /usr/local/share/couchdb/server/main.js
+    ;
+    ; Erlang view engine
+    [native_query_servers]
+    erlang = {couch_native_process, start_link, []}
 
 ## Example Output
 
