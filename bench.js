@@ -26,7 +26,7 @@ var resultsDdoc = {
 };
 
 var ddocs = {
-  "base_spidermonkey_1_2_x": {
+  "base_spidermonkey": {
     _id: "_design/base_spidermonkey",
     "language": "javascript",
     "views": {
@@ -36,6 +36,15 @@ var ddocs = {
             emit(doc.foo, null);
           }
         }
+      }
+    }
+  },
+  "erlang_view": {
+    _id: "_design/erlang_view",
+    "language": "erlang",
+    "views": {
+      "by_foo": {
+        "map": 'fun({Doc}) -> V = proplists:get_value(<<"foo">>, Doc, null), if V == null -> ok; true -> Emit(V, null) end end.'
       }
     }
   }
